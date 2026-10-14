@@ -3,9 +3,13 @@
 # A native GetMessage loop keeps the low-level hook alive (WinForms Application.Run
 # can return immediately and drop the hook).
 $ErrorActionPreference = "Stop"
-$OutputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false
-[Console]::Out.AutoFlush = $true
-[Console]::InputEncoding = $OutputEncoding
+$utf8 = New-Object System.Text.UTF8Encoding $false
+$OutputEncoding = $utf8
+# Electron pipes stdout/stdin. Redirected Console streams on Windows PowerShell
+# 5.1 often have no AutoFlush setter — that must not kill the hook.
+try { [Console]::OutputEncoding = $utf8 } catch { }
+try { [Console]::InputEncoding = $utf8 } catch { }
+try { [Console]::Out.AutoFlush = $true } catch { }
 
 Add-Type -TypeDefinition @"
 using System;

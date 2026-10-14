@@ -4,8 +4,10 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$OutputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false
-[Console]::Out.AutoFlush = $true
+$utf8 = New-Object System.Text.UTF8Encoding $false
+$OutputEncoding = $utf8
+try { [Console]::OutputEncoding = $utf8 } catch { }
+try { [Console]::Out.AutoFlush = $true } catch { }
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
