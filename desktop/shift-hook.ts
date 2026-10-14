@@ -1,8 +1,7 @@
 import { app } from "electron";
-import { existsSync } from "node:fs";
 import { type ChildProcess, spawn } from "node:child_process";
-import { join } from "node:path";
 import { parseHookLine, type HookMessage } from "../src/core/hook-protocol";
+import { firstExisting, hookScriptCandidates } from "./packaged-paths";
 
 export function startShiftHook(onMessage: (message: HookMessage) => void): () => void {
   if (process.platform !== "win32") {
@@ -42,10 +41,12 @@ export function startShiftHook(onMessage: (message: HookMessage) => void): () =>
 }
 
 function resolveHookScript(): string | null {
-  const candidates = [
-    join(app.getAppPath(), "scripts/windows-shift-hook.ps1"),
-    join(process.cwd(), "scripts/windows-shift-hook.ps1"),
-    join(__dirname, "../../scripts/windows-shift-hook.ps1"),
-  ];
-  return candidates.find((path) => existsSync(path)) ?? null;
+  return firstExisting(
+    hookScriptCandidates({
+      resourcesPath: process.resourcesPath,
+      appPath: app.getAppPath(),
+      cwd: process.cwd(),
+      moduleDir: __dirname,
+    }),
+  );
 }

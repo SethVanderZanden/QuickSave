@@ -11,7 +11,9 @@ export default defineConfig({
     resolve: { alias },
     build: {
       rollupOptions: {
-        input: resolve(__dirname, "desktop/main.ts"),
+        input: {
+          index: resolve(__dirname, "desktop/main.ts"),
+        },
       },
     },
   },
@@ -20,7 +22,9 @@ export default defineConfig({
     resolve: { alias },
     build: {
       rollupOptions: {
-        input: resolve(__dirname, "desktop/preload.ts"),
+        input: {
+          index: resolve(__dirname, "desktop/preload.ts"),
+        },
       },
     },
   },

@@ -45,6 +45,14 @@ export function SettingsDialog() {
           void controller.bridge.setLaunchAtStartup(launchAtStartup);
         }}
       />
+      <div className="mt-5 border-t border-[var(--line)] pt-3 text-[12px] leading-5 text-[var(--muted)]">
+        <p className="mb-1 text-[11px] uppercase tracking-[0.16em]">About</p>
+        <p>QuickSave is open-source generic software, provided as is, with no warranty.</p>
+        <p className="mt-1">
+          You are solely responsible for how you use it. The authors and contributors are not
+          responsible for what it does on your machine.
+        </p>
+      </div>
       <div className="mt-4">
         <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">Theme</p>
         <div className="grid grid-cols-4 gap-1.5">

@@ -1,0 +1,46 @@
+appId: com.quicksave.desktop
+productName: QuickSave
+copyright: Copyright © QuickSave contributors. Provided AS IS. See LICENSE and DISCLAIMER.md.
+asar: true
+npmRebuild: false
+directories:
+  output: release
+  buildResources: build
+files:
+  - package.json
+  - from: out
+    to: out
+    filter:
+      - "**/*"
+extraResources:
+  - from: scripts/windows-shift-hook.ps1
+    to: scripts/windows-shift-hook.ps1
+  - from: assets/icon.png
+    to: icon.png
+  - from: LICENSE
+    to: LICENSE
+  - from: DISCLAIMER.md
+    to: DISCLAIMER.md
+win:
+  icon: build/icon.png
+  signExecutable: false
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: QuickSave
+  deleteAppDataOnUninstall: false
+  license: build/EULA.txt
+  artifactName: QuickSave-Setup-${version}.${ext}
+  uninstallDisplayName: QuickSave
+portable:
+  artifactName: QuickSave-Portable-${version}.${ext}

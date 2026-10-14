@@ -8,59 +8,72 @@ Select something worth keeping. Double-tap **Left Shift**. Keep working. Queue t
 
 Your notes are a file on this machine. No account. No sync. No telemetry.
 
-## Run on Windows from this repo
+## Disclaimer
 
-You need [Node.js 20+](https://nodejs.org) (LTS is fine).
+QuickSave is **generic open-source software**, provided **as is**, with **no warranty**.
+
+You are solely responsible for how you use it. The authors and contributors are **not responsible** for what it does, for data you capture, or for anything that happens on your machine. See [DISCLAIMER.md](DISCLAIMER.md) and [LICENSE](LICENSE). If you do not accept that, do not install it.
+
+## Install on Windows (re-run from the Start menu)
+
+1. Open **[Releases](https://github.com/SethVanderZanden/QuickSave/releases)** and download **`QuickSave-Setup-*.exe`**.
+2. Run the installer. SmartScreen may warn because the file is unsigned — **More info → Run anyway**.
+3. Finish the installer (per-user, no admin required). It creates **Start menu** and **desktop** shortcuts.
+4. Open **QuickSave** from the Start menu whenever you want it. You do not need Git or Node after that.
+
+Optional: **Settings → Start with Windows** so it comes back at login.
+
+A portable build (`QuickSave-Portable-*.exe`) is on the same Releases page if you do not want an install.
+
+Installer builds are also attached to [GitHub Actions](https://github.com/SethVanderZanden/QuickSave/actions) on every pull request.
+
+## Use it
+
+- The panel floats. Closing it hides it to the **tray**; Quit from the tray to exit.
+- **Left Shift twice** captures selected text in any app. Fallback: `Ctrl+Shift+C`.
+- **Right Shift twice** shows or hides the panel. Fallback: `Ctrl+Shift+Space`.
+- Type prompts at the bottom, Enter to save. `Ctrl+C` copies a note back into ChatGPT / Claude / Cursor. Space checks it off.
+- `# ProjectName` creates a section. `Ctrl+K` switches sections.
+
+Notes: `%APPDATA%\QuickSave\workspace.json`.
+
+## Run from source (developers)
+
+You need [Node.js 20+](https://nodejs.org).
 
 ```bat
-git clone <this-repo>
+git clone https://github.com/SethVanderZanden/QuickSave.git
 cd QuickSave
 start.bat
 ```
 
-Or in PowerShell:
-
-```powershell
-.\start.ps1
-```
-
-The first launch runs `npm install` and then opens the floating panel. Later launches are the same command.
-
-If Node is already installed:
+Build a Windows installer locally (on Windows):
 
 ```bat
-npm install
-npm start
+npm ci
+npm run dist:win
 ```
 
-Browser-only UI (no global hotkeys):
+Output is `release\QuickSave-Setup-*.exe`.
 
-```bat
-npm run web
-```
-
-Then open `http://127.0.0.1:5173`.
+Browser-only UI (no global hotkeys): `npm run web` then open `http://127.0.0.1:5173`.
 
 ## What it does
 
-Researched from Copper’s public description, privacy/terms, and the workflow shadcn has written about:
-
 | Workflow | How |
 | --- | --- |
-| Capture selected text from any app | **Left Shift ×2** (Windows hook). Fallback: `Ctrl+Shift+C` |
+| Capture selected text from any app | **Left Shift ×2**. Fallback: `Ctrl+Shift+C` |
 | Show / hide the panel | **Right Shift ×2**. Fallback: `Ctrl+Shift+Space` |
 | Queue prompts | Type in the composer, Enter to save |
 | Send work back to an AI app | Select notes, `Ctrl+C` or **Copy as list** (`Ctrl+Shift+C`) |
 | Check items off | Space, or the circle checkbox |
 | Group by project | Type `# Name` in the composer. `## Name` starts a fresh section and collapses the rest |
 | Switch sections | `Ctrl+K` |
-| Attach images and files | Drop onto the panel, or paste in the browser preview |
-| Sketch | `Ctrl+Shift+D` — pen, shapes, text, colors; save into QuickSave |
+| Attach images and files | Drop onto the panel |
+| Sketch | `Ctrl+Shift+D` |
 | Search | `Ctrl+F` |
 | Logbook | Clear done archives instead of deleting |
 | Stay out of the way | Closes to the tray, optional always-on-top |
-
-Notes live in `%APPDATA%\QuickSave\workspace.json`. Attachments sit beside that file. Nothing is sent anywhere.
 
 ## Shortcuts
 
@@ -87,11 +100,9 @@ The Shift detector only watches Shift. It does not record other keystrokes.
 Hexagonal / ports-and-adapters:
 
 - `src/core` — pure domain: notes, sections, capture policy, composer (`#` / `##`), markdown, search, export, undo, reducer
-- `src/persist` — JSON file store with atomic writes + corrupt-file recovery; localStorage adapter for the browser preview
-- `src/ui` — React panel (shadcn-like, copper palette)
-- `desktop` — Electron shell: tray, global shortcuts, Windows Shift hook, selection capture via a copy chord
-
-The UI talks to a `QuickSaveBridge`. Electron implements it over IPC (`contextIsolation`, no `nodeIntegration`, sandboxed renderer). The browser preview implements the same port so the panel can be developed and tested without Windows.
+- `src/persist` — JSON file store with atomic writes + corrupt-file recovery
+- `src/ui` — React panel
+- `desktop` — Electron shell: tray, global shortcuts, Windows Shift hook, NSIS installer
 
 ## Tests
 
@@ -99,8 +110,6 @@ The UI talks to a `QuickSaveBridge`. Electron implements it over IPC (`contextIs
 npm test
 npm run typecheck
 ```
-
-Domain logic is covered with Vitest. The panel is covered with Testing Library (compose, sections, done, search, sample workflow).
 
 ## Privacy
 
@@ -111,4 +120,4 @@ Domain logic is covered with Vitest. The panel is covered with Testing Library (
 
 ## License
 
-MIT. If you are on a Mac and want the original, buy [Copper](https://shadcn.com/copper).
+MIT. See [DISCLAIMER.md](DISCLAIMER.md). If you are on a Mac and want the original, buy [Copper](https://shadcn.com/copper).

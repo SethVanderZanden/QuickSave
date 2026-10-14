@@ -10,12 +10,14 @@ import {
   shell,
   Tray,
 } from "electron";
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { hydrateWorkspace } from "../src/core/hydrate";
 import { emptyWorkspace, type Settings, type Workspace } from "../src/core/models";
 import { JsonFileStore } from "../src/persist/json-store";
 import { FileAttachmentStore } from "../src/persist/attachment-store";
+import { firstExisting, iconCandidates } from "./packaged-paths";
 import { attachmentsDir, dataDir, workspacePath } from "./paths";
 import { captureSelectedText } from "./selection";
 import { startShiftHook } from "./shift-hook";
@@ -56,7 +58,7 @@ function createWindow(frame: Workspace["window"]): BrowserWindow {
     roundedCorners: true,
     backgroundMaterial: process.platform === "win32" ? "acrylic" : undefined,
     webPreferences: {
-      preload: join(__dirname, "../preload/index.js"),
+      preload: resolvePreload(),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -125,8 +127,17 @@ function registerShortcuts(): void {
 }
 
 function createTray(): void {
-  const iconPath = join(app.getAppPath(), "assets/icon.png");
-  const image = nativeImage.createFromPath(iconPath);
+  const iconPath = firstExisting(
+    iconCandidates({
+      resourcesPath: process.resourcesPath,
+      appPath: app.getAppPath(),
+      cwd: process.cwd(),
+      moduleDir: __dirname,
+    }),
+  );
+  const image = iconPath
+    ? nativeImage.createFromPath(iconPath)
+    : nativeImage.createFromDataURL(TRAY_PNG);
   tray = new Tray(image.isEmpty() ? nativeImage.createFromDataURL(TRAY_PNG) : image.resize({ width: 16, height: 16 }));
   tray.setToolTip("QuickSave");
   tray.setContextMenu(
@@ -246,6 +257,12 @@ app.on("window-all-closed", () => {
     /* stay in tray */
   }
 });
+
+function resolvePreload(): string {
+  const dir = join(__dirname, "../preload");
+  const names = ["index.js", "index.mjs", "preload.js", "preload.mjs"];
+  return names.map((name) => join(dir, name)).find((path) => existsSync(path)) ?? join(dir, "index.js");
+}
 
 const TRAY_PNG =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAALUlEQVR4nO3OsQkAIBAEwZj/0MIezMRc4QaGfWB3ZgAAAAAAAAAA4D9r7gN/YgGq0gMdkQAAAABJRU5ErkJggg==";
