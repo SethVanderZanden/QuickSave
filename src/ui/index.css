@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Segoe UI Variable", "Segoe UI", "Geist", ui-sans-serif, system-ui,
+    sans-serif;
+  --color-copper: #d08a4c;
+  --color-copper-soft: #e8c39e;
+  --color-copper-deep: #8a4b22;
+}
+
+:root {
+  --bg: #0e0d0c;
+  --bg-elev: #161412;
+  --panel: #171513f2;
+  --ink: #f4efe8;
+  --muted: #a79b8e;
+  --line: #2c2722;
+  --fill: #221e1a;
+  --danger: #e07864;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #f3eee7;
+  --bg-elev: #fffaf4;
+  --panel: #fffaf6f0;
+  --ink: #1c1712;
+  --muted: #6f6458;
+  --line: #e4d8cc;
+  --fill: #f3e8dc;
+  --danger: #c24b38;
+  --shadow: 0 24px 60px rgba(80, 50, 20, 0.12);
+  color-scheme: light;
+}
+
+:root[data-theme="glass"] {
+  --panel: color-mix(in oklab, #1a1612 62%, transparent);
+  --fill: color-mix(in oklab, #2a231c 55%, transparent);
+  --line: color-mix(in oklab, #e8c39e 18%, transparent);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-copper) 40%, transparent);
+}
+
+.drag-region {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.panel-shell {
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(28px) saturate(1.35);
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted) 40%, transparent) transparent;
+}
+
+kbd {
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--line);
+  background: var(--fill);
+  border-radius: 5px;
+  padding: 1px 5px;
+  color: var(--muted);
+}
+
+.note-done .md {
+  text-decoration: line-through;
+  opacity: 0.62;
+}
+
+[cmdk-group-heading] {
+  padding: 8px 8px 4px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.md a {
+  color: var(--color-copper-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.md code {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.85em;
+  background: var(--fill);
+  border-radius: 4px;
+  padding: 0.05em 0.35em;
+}
+
+@keyframes hud-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hud {
+  animation: hud-in 160ms ease-out;
+}

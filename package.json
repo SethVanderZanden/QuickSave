@@ -1,0 +1,52 @@
+{
+  "name": "quicksave",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A local Windows capture pad for AI-assisted work: to-do list, clipboard, and scratchpad.",
+  "author": "QuickSave",
+  "license": "MIT",
+  "main": "./out/main/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "electron-vite dev",
+    "web": "vite --config vite.web.config.ts",
+    "build": "electron-vite build",
+    "dist": "npm run build && electron-builder --publish never",
+    "dist:win": "npm run build && electron-builder --win --x64 --publish never",
+    "preview": "electron-vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "electron-vite": "^4.0.1",
+    "lucide-react": "^0.544.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.3",
+    "electron": "^37.4.0",
+    "electron-builder": "^26.0.12",
+    "happy-dom": "^18.0.1",
+    "jsdom": "^27.0.0",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7",
+    "vitest": "^3.2.4"
+  }
+}
