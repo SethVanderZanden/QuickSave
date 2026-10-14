@@ -46,7 +46,7 @@ export function SettingsDialog() {
         }}
       />
       <div className="mt-5 border-t border-[var(--line)] pt-3 text-[12px] leading-5 text-[var(--muted)]">
-        <p className="mb-1 text-[11px] uppercase tracking-[0.16em]">About</p>
+        <p className="mb-1 text-[11px] tracking-[0.06em] text-[var(--muted)]">About</p>
         <p>QuickSave is open-source generic software, provided as is, with no warranty.</p>
         <p className="mt-1">
           You are solely responsible for how you use it. The authors and contributors are not
@@ -54,16 +54,16 @@ export function SettingsDialog() {
         </p>
       </div>
       <div className="mt-4">
-        <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]">Theme</p>
+        <p className="mb-2 text-[11px] tracking-[0.06em] text-[var(--muted)]">Theme</p>
         <div className="grid grid-cols-4 gap-1.5">
           {(["dark", "light", "glass", "system"] as ThemeName[]).map((theme) => (
             <button
               key={theme}
               type="button"
               onClick={() => controller.session.patchSettings({ theme })}
-              className={`rounded-lg border px-2 py-1.5 text-[12px] capitalize ${
+              className={`rounded-[var(--radius-control)] border px-2 py-1.5 text-[12px] capitalize ${
                 settings.theme === theme
-                  ? "border-[var(--color-copper)] text-[var(--color-copper-soft)]"
+                  ? "border-[var(--accent)] text-[var(--accent-soft)]"
                   : "border-[var(--line)]"
               }`}
             >
@@ -111,7 +111,7 @@ export function LogbookDialog() {
       ) : (
         <ul className="space-y-2">
           {workspace.logbook.map((note) => (
-            <li key={note.id} className="rounded-xl border border-[var(--line)] p-2.5">
+            <li key={note.id} className="rounded-[var(--radius-card)] border border-[var(--line)] p-3">
               <p className="text-[13px] leading-5">{note.body}</p>
               <div className="mt-2 flex items-center justify-between text-[11px] text-[var(--muted)]">
                 <span>{formatRelative(note.updatedAt)}</span>
@@ -149,14 +149,14 @@ export function ConfirmDialog() {
       <div className="mt-4 flex justify-end gap-2">
         <button
           type="button"
-          className="rounded-lg px-3 py-1.5 text-sm hover:bg-[var(--fill)]"
+          className="rounded-[var(--radius-control)] px-3 py-1.5 text-sm hover:bg-[var(--fill)]"
           onClick={() => controller.patchUi({ confirm: null })}
         >
           Cancel
         </button>
         <button
           type="button"
-          className="rounded-lg bg-[var(--danger)] px-3 py-1.5 text-sm text-white"
+          className="rounded-[var(--radius-control)] bg-[var(--danger)] px-3 py-1.5 text-sm text-white"
           onClick={() => {
             ui.confirm?.action();
             controller.patchUi({ confirm: null });
@@ -187,7 +187,7 @@ function Toggle({
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`h-5 w-9 rounded-full p-0.5 transition ${
-          checked ? "bg-[var(--color-copper)]" : "bg-[var(--line)]"
+          checked ? "bg-[var(--accent)]" : "bg-[var(--line)]"
         }`}
       >
         <span
@@ -208,16 +208,16 @@ function Modal({
   children: ReactNode;
 }) {
   return (
-    <div className="absolute inset-0 z-40 grid place-items-center bg-black/35 p-5 no-drag" onClick={onClose}>
+    <div className="absolute inset-0 z-40 grid place-items-center bg-black/40 p-5 no-drag" onClick={onClose}>
       <div
         role="dialog"
         aria-label={title}
-        className="max-h-[80%] w-full overflow-auto rounded-2xl border border-[var(--line)] bg-[var(--bg-elev)] p-4 shadow-[var(--shadow)] scrollbar-thin"
+        className="max-h-[80%] w-full overflow-auto rounded-[14px] border border-[var(--line)] bg-[var(--bg-elev)] p-5 shadow-[var(--shadow)] scrollbar-thin"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-medium tracking-wide">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-md p-1 hover:bg-[var(--fill)]">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-serif text-[18px] tracking-[-0.02em]">{title}</h2>
+          <button type="button" onClick={onClose} className="rounded-[var(--radius-control)] p-1 hover:bg-[var(--fill)]">
             <X className="h-4 w-4" />
           </button>
         </div>

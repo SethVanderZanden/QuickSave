@@ -29,7 +29,7 @@ export function Composer({
 
   return (
     <div
-      className="border-t border-[var(--line)] p-3 no-drag"
+      className="border-t border-[var(--line)] p-4 no-drag"
       onDragOver={(event) => event.preventDefault()}
       onDrop={(event) => {
         event.preventDefault();
@@ -37,7 +37,7 @@ export function Composer({
         if (files.length) onFiles(files);
       }}
     >
-      <div className="flex items-end gap-2 rounded-xl border border-[var(--line)] bg-[var(--fill)] px-3 py-2">
+      <div className="flex items-end gap-2 rounded-[var(--radius-card)] border border-[var(--line)] bg-[var(--fill)] px-3.5 py-2.5">
         <textarea
           ref={ref}
           data-testid="composer"
@@ -57,7 +57,7 @@ export function Composer({
           type="button"
           title="Sections and commands"
           onClick={onOpenPalette}
-          className="grid h-7 w-7 place-items-center rounded-md text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
+          className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
         >
           <Hash className="h-3.5 w-3.5" />
         </button>
@@ -65,12 +65,12 @@ export function Composer({
           type="button"
           title="Sketch"
           onClick={onOpenSketch}
-          className="grid h-7 w-7 place-items-center rounded-md text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
+          className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] text-[var(--muted)] hover:bg-[var(--panel)] hover:text-[var(--ink)]"
         >
           <PenLine className="h-3.5 w-3.5" />
         </button>
       </div>
-      <p className="mt-1.5 px-1 text-[10px] tracking-wide text-[var(--muted)]">
+      <p className="mt-2 px-1 text-[11px] text-[var(--muted)]">
         Enter to save · Shift+Enter for a new line · drop files here
       </p>
     </div>

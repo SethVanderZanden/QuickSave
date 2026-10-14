@@ -2,6 +2,7 @@ import { App } from "@/ui/App";
 import { AppController } from "@/ui/controller";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
 
 function renderApp() {
   const controller = AppController.demo();
@@ -10,6 +11,12 @@ function renderApp() {
 }
 
 describe("QuickSave panel", () => {
+  it("does not show window chrome in the browser preview", () => {
+    renderApp();
+    expect(screen.queryByTestId("window-close")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("window-minimize")).not.toBeInTheDocument();
+  });
+
   it("composes a note from the scratchpad", async () => {
     const user = userEvent.setup();
     renderApp();
@@ -53,6 +60,27 @@ describe("QuickSave panel", () => {
     await user.type(screen.getByTestId("search"), "copper");
     expect(await screen.findByText("keep the copper workflow")).toBeInTheDocument();
     expect(screen.queryByText("unrelated snippet")).not.toBeInTheDocument();
+  });
+
+  it("shows minimize and close controls in the desktop shell", () => {
+    const quit = vi.fn();
+    const hide = vi.fn();
+    const controller = AppController.demo({ isDesktop: true });
+    controller.bridge.quit = quit;
+    controller.bridge.hide = hide;
+    render(<App controller={controller} />);
+    expect(screen.getByTestId("window-close")).toBeInTheDocument();
+    expect(screen.getByTestId("window-minimize")).toBeInTheDocument();
+  });
+
+  it("quits from the desktop close control", async () => {
+    const user = userEvent.setup();
+    const quit = vi.fn(async () => undefined);
+    const controller = AppController.demo({ isDesktop: true });
+    controller.bridge.quit = quit;
+    render(<App controller={controller} />);
+    await user.click(screen.getByTestId("window-close"));
+    expect(quit).toHaveBeenCalled();
   });
 
   it("loads a sample workflow from the empty state", async () => {

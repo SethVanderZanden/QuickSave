@@ -68,10 +68,10 @@ export class AppController {
     this.session.subscribe(() => this.notify());
   }
 
-  static demo(): AppController {
+  static demo(options: { isDesktop?: boolean } = {}): AppController {
     const memory = new MemoryStore();
     const controller = new AppController({
-      isDesktop: false,
+      isDesktop: Boolean(options.isDesktop),
       load: () => memory.load(),
       save: (workspace) => memory.save(workspace),
       captureSelection: async () => null,

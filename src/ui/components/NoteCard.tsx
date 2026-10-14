@@ -37,9 +37,9 @@ export function NoteCard({
       onDoubleClick={onEdit}
       onContextMenu={onContextMenu}
       className={cn(
-        "group relative rounded-xl border px-3 py-2.5 transition-colors",
+        "group relative rounded-[var(--radius-card)] border px-3.5 py-3 transition-colors",
         selected
-          ? "border-[color-mix(in_oklab,var(--color-copper)_55%,var(--line))] bg-[color-mix(in_oklab,var(--color-copper)_12%,transparent)]"
+          ? "border-[color-mix(in_oklab,var(--accent)_50%,var(--line))] bg-[color-mix(in_oklab,var(--accent)_10%,transparent)]"
           : "border-transparent hover:border-[var(--line)] hover:bg-[var(--fill)]",
         note.done && "note-done",
       )}
@@ -55,17 +55,17 @@ export function NoteCard({
           className={cn(
             "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full border no-drag",
             note.done
-              ? "border-[var(--color-copper)] bg-[var(--color-copper)] text-[#1a120c]"
-              : "border-[var(--muted)] text-transparent hover:border-[var(--color-copper-soft)]",
+              ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-ink)]"
+              : "border-[color-mix(in_oklab,var(--muted)_70%,transparent)] bg-transparent text-transparent hover:border-[var(--accent-soft)]",
           )}
         >
-          <Check className="h-3 w-3" strokeWidth={3} />
+          <Check className={cn("h-3 w-3", note.done ? "opacity-100" : "opacity-0")} strokeWidth={3} />
         </button>
         <div className="min-w-0 flex-1">
           {note.kind === "sketch" ? (
             <button
               type="button"
-              className="mb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-[0.14em] text-[var(--muted)] no-drag"
+              className="mb-1.5 flex items-center gap-1.5 text-[11px] tracking-[0.04em] text-[var(--muted)] no-drag"
               onClick={(event) => {
                 event.stopPropagation();
                 onOpenSketch?.();
@@ -112,7 +112,7 @@ export function NoteCard({
             event.stopPropagation();
             onCopy();
           }}
-          className="h-7 w-7 shrink-0 rounded-md text-[var(--muted)] opacity-0 transition group-hover:opacity-100 hover:bg-[var(--fill)] hover:text-[var(--ink)] no-drag"
+          className="h-8 w-8 shrink-0 rounded-[var(--radius-control)] text-[var(--muted)] opacity-0 transition group-hover:opacity-100 hover:bg-[var(--fill)] hover:text-[var(--ink)] no-drag"
         >
           <Copy className="mx-auto h-3.5 w-3.5" />
         </button>

@@ -1,4 +1,5 @@
-import { hookScriptCandidates, iconCandidates } from "../../desktop/packaged-paths";
+import { join } from "node:path";
+import { hookScriptCandidates, iconCandidates, windowsPowershellPath } from "../../desktop/packaged-paths";
 
 describe("packaged resource paths", () => {
   const roots = {
@@ -16,5 +17,11 @@ describe("packaged resource paths", () => {
 
   it("still looks in the git checkout for development", () => {
     expect(hookScriptCandidates(roots).some((path) => path.includes("QuickSave"))).toBe(true);
+  });
+
+  it("uses 64-bit System32 PowerShell so the hook sees 64-bit apps", () => {
+    expect(windowsPowershellPath("C:\\Windows")).toBe(
+      join("C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe"),
+    );
   });
 });

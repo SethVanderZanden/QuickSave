@@ -5,14 +5,15 @@ import {
   Keyboard,
   Minus,
   MoreHorizontal,
+  Power,
   Search,
   Settings,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { isDesktopShell } from "../bridge";
 import { useApp } from "../hooks/use-app";
-import { isDesktopRuntime } from "../bridge";
-import { isTypingTarget } from "../lib/utils";
+import { cn, isTypingTarget } from "../lib/utils";
 import { CommandPalette } from "./CommandPalette";
 import { Composer } from "./Composer";
 import { ConfirmDialog, LogbookDialog, SettingsDialog, ShortcutSheet } from "./Dialogs";
@@ -24,7 +25,7 @@ export function Panel() {
   const { controller, workspace, ui } = useApp();
   const searchRef = useRef<HTMLInputElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const desktop = isDesktopRuntime();
+  const desktop = isDesktopShell(controller.bridge);
   const hits = controller.session.search(ui.query);
   const notes = hits.map((hit) => hit.note);
   const grouped = useMemo(() => {
@@ -55,6 +56,11 @@ export function Panel() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const meta = event.ctrlKey || event.metaKey;
+      if (meta && event.key.toLowerCase() === "q") {
+        event.preventDefault();
+        void controller.bridge.quit();
+        return;
+      }
       if (meta && event.key.toLowerCase() === "k") {
         event.preventDefault();
         controller.patchUi({ paletteOpen: !ui.paletteOpen });
@@ -190,19 +196,21 @@ export function Panel() {
 
   return (
     <div
-      className="panel-shell relative flex h-full min-h-[520px] w-full flex-col overflow-hidden rounded-[22px]"
+      className={cn(
+        "panel-shell relative flex h-full w-full flex-col overflow-hidden",
+        desktop ? "min-h-0 rounded-[var(--radius-panel)]" : "min-h-[520px] rounded-[var(--radius-panel)]",
+      )}
       data-testid="panel"
     >
-      <header className="drag-region flex items-center gap-2 border-b border-[var(--line)] px-3 py-2.5">
-        <div className="grid h-6 w-6 place-items-center rounded-md bg-[var(--color-copper)] text-[11px] font-semibold text-[#1a120c]">
-          Q
-        </div>
+      <header className="drag-region flex items-center gap-3 border-b border-[var(--line)] px-4 py-3">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted)]">QuickSave</p>
+          <p className="font-serif text-[17px] leading-none tracking-[-0.02em] text-[var(--ink)]">
+            QuickSave
+          </p>
           <button
             type="button"
             data-testid="active-section"
-            className="block max-w-full truncate text-left text-sm no-drag hover:text-[var(--color-copper-soft)]"
+            className="mt-1 block max-w-full truncate text-left text-[12px] text-[var(--muted)] no-drag hover:text-[var(--accent-soft)]"
             onClick={() => controller.patchUi({ paletteOpen: true })}
           >
             {title}
@@ -213,12 +221,12 @@ export function Panel() {
             type="button"
             aria-label="Menu"
             onClick={() => setMenuOpen((open) => !open)}
-            className="grid h-7 w-7 place-items-center rounded-md hover:bg-[var(--fill)]"
+            className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] text-[var(--muted)] hover:bg-[var(--fill)] hover:text-[var(--ink)]"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>
           {menuOpen ? (
-            <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-[var(--line)] bg-[var(--bg-elev)] p-1 text-[13px] shadow-[var(--shadow)]">
+            <div className="absolute right-0 z-20 mt-1.5 w-52 rounded-[12px] border border-[var(--line)] bg-[var(--bg-elev)] p-1.5 text-[13px] shadow-[var(--shadow)]">
               <MenuItem
                 onClick={() => {
                   setMenuOpen(false);
@@ -268,32 +276,54 @@ export function Panel() {
                 <Settings className="h-3.5 w-3.5" /> Settings
               </MenuItem>
               {desktop ? (
-                <MenuItem
-                  onClick={() => {
-                    setMenuOpen(false);
-                    void controller.bridge.hide();
-                  }}
-                >
-                  <Minus className="h-3.5 w-3.5" /> Hide
-                </MenuItem>
+                <>
+                  <MenuItem
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void controller.bridge.hide();
+                    }}
+                  >
+                    <Minus className="h-3.5 w-3.5" /> Hide to tray
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      setMenuOpen(false);
+                      void controller.bridge.quit();
+                    }}
+                  >
+                    <Power className="h-3.5 w-3.5" /> Quit QuickSave
+                  </MenuItem>
+                </>
               ) : null}
             </div>
           ) : null}
         </div>
         {desktop ? (
-          <button
-            type="button"
-            aria-label="Hide"
-            className="no-drag grid h-7 w-7 place-items-center rounded-md hover:bg-[var(--fill)]"
-            onClick={() => void controller.bridge.hide()}
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="no-drag flex items-center pl-1">
+            <button
+              type="button"
+              aria-label="Minimize"
+              data-testid="window-minimize"
+              className="caption-btn"
+              onClick={() => void controller.bridge.hide()}
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Close QuickSave"
+              data-testid="window-close"
+              className="caption-btn caption-close"
+              onClick={() => void controller.bridge.quit()}
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
         ) : null}
       </header>
 
-      <div className="no-drag border-b border-[var(--line)] px-3 py-2">
-        <label className="flex items-center gap-2 rounded-xl bg-[var(--fill)] px-2.5 py-1.5">
+      <div className="no-drag border-b border-[var(--line)] px-4 py-3">
+        <label className="flex items-center gap-2 rounded-[var(--radius-card)] bg-[var(--fill)] px-3 py-2">
           <Search className="h-3.5 w-3.5 text-[var(--muted)]" />
           <input
             ref={searchRef}
@@ -308,7 +338,7 @@ export function Panel() {
       </div>
 
       <div
-        className="scrollbar-thin min-h-0 flex-1 overflow-auto px-2 py-2"
+        className="scrollbar-thin min-h-0 flex-1 overflow-auto px-3 py-3"
         onClick={() => controller.patchUi({ selectedIds: [], editingId: null })}
       >
         {workspace.notes.length === 0 && workspace.sections.length === 0 ? (
@@ -327,7 +357,7 @@ export function Panel() {
                 <button
                   key={group.section.id}
                   type="button"
-                  className="mb-1 flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-[12px] text-[var(--muted)] hover:bg-[var(--fill)]"
+                  className="mb-1 flex w-full items-center justify-between rounded-[var(--radius-control)] px-2.5 py-2 text-left text-[12px] text-[var(--muted)] hover:bg-[var(--fill)]"
                   onClick={(event) => {
                     event.stopPropagation();
                     controller.session.toggleSectionCollapse(group.section!.id);
@@ -344,7 +374,7 @@ export function Panel() {
                   <div className="flex items-center justify-between px-2 pb-1">
                     <button
                       type="button"
-                      className="text-[11px] uppercase tracking-[0.16em] text-[var(--muted)]"
+                      className="text-[11px] tracking-[0.08em] text-[var(--muted)]"
                       onClick={(event) => {
                         event.stopPropagation();
                         if (group.section) {
@@ -368,7 +398,7 @@ export function Panel() {
                     ) : null}
                   </div>
                 ) : null}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {group.notes.map((note) =>
                     ui.editingId === note.id ? (
                       <NoteEditor
@@ -440,7 +470,7 @@ function MenuItem({ onClick, children }: { onClick: () => void; children: ReactN
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-[var(--fill)]"
+      className="flex w-full items-center gap-2 rounded-[var(--radius-control)] px-2.5 py-2 text-left hover:bg-[var(--fill)]"
     >
       {children}
     </button>
@@ -458,7 +488,7 @@ function NoteEditor({
 }) {
   const [value, setValue] = useState(note.body);
   return (
-    <div className="rounded-xl border border-[var(--color-copper)] bg-[var(--fill)] p-2" onClick={(event) => event.stopPropagation()}>
+    <div className="rounded-[var(--radius-card)] border border-[var(--accent)] bg-[var(--fill)] p-3" onClick={(event) => event.stopPropagation()}>
       <textarea
         autoFocus
         data-testid="note-editor"
@@ -476,7 +506,7 @@ function NoteEditor({
         </button>
         <button
           type="button"
-          className="rounded-md bg-[var(--color-copper)] px-2 py-1 text-[12px] text-[#1a120c]"
+          className="rounded-[var(--radius-control)] bg-[var(--accent)] px-2.5 py-1 text-[12px] text-[var(--accent-ink)]"
           onClick={() => onSave(value)}
         >
           Save
@@ -490,16 +520,16 @@ function EmptyState({ onSample, onCapture }: { onSample: () => void; onCapture: 
   return (
     <div className="grid h-full place-items-center px-6 text-center" data-testid="empty-state">
       <div>
-        <p className="text-sm text-[var(--ink)]">A quiet place for useful things</p>
-        <p className="mt-2 text-[13px] leading-5 text-[var(--muted)]">
+        <p className="font-serif text-[22px] leading-7 text-[var(--ink)]">Keep what matters.</p>
+        <p className="mt-3 text-[13px] leading-6 text-[var(--muted)]">
           Select text in any app and double-tap Left Shift. Queue the next prompts here, copy them back
           into ChatGPT, Claude, or Cursor, and check them off as you go.
         </p>
-        <div className="mt-4 flex justify-center gap-2">
+        <div className="mt-5 flex justify-center gap-2">
           <button
             type="button"
             onClick={onCapture}
-            className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[12px]"
+            className="rounded-[var(--radius-control)] border border-[var(--line)] px-3.5 py-2 text-[12px]"
           >
             Capture clipboard
           </button>
@@ -507,7 +537,7 @@ function EmptyState({ onSample, onCapture }: { onSample: () => void; onCapture: 
             type="button"
             data-testid="load-sample"
             onClick={onSample}
-            className="rounded-lg bg-[var(--color-copper)] px-3 py-1.5 text-[12px] text-[#1a120c]"
+            className="rounded-[var(--radius-control)] bg-[var(--accent)] px-3.5 py-2 text-[12px] text-[var(--accent-ink)]"
           >
             Load sample
           </button>

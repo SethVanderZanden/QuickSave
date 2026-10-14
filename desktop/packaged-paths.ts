@@ -29,3 +29,7 @@ export function iconCandidates(roots: PathRoots): string[] {
 export function firstExisting(candidates: string[]): string | null {
   return candidates.find((path) => existsSync(path)) ?? null;
 }
+
+export function windowsPowershellPath(systemRoot = process.env.SystemRoot ?? "C:\\Windows"): string {
+  return join(systemRoot, "System32", "WindowsPowerShell", "v1.0", "powershell.exe");
+}
