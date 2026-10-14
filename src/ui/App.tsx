@@ -31,7 +31,7 @@ export function App({ controller: injected }: AppProps) {
   return (
     <AppContext.Provider value={controller}>
       {desktop ? (
-        <div className="h-full overflow-hidden bg-transparent">
+        <div className="desktop-shell h-full overflow-hidden">
           <Panel />
         </div>
       ) : (

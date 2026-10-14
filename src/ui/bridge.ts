@@ -5,7 +5,9 @@ export type BridgeEvent =
   | { type: "toggle-request" }
   | { type: "sketch-request" }
   | { type: "captured-empty" }
-  | { type: "captured-text"; text: string };
+  | { type: "captured-text"; text: string }
+  | { type: "copy-request" }
+  | { type: "copy-list-request" };
 
 export interface QuickSaveBridge {
   isDesktop: boolean;

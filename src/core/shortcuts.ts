@@ -47,7 +47,7 @@ export const SHORTCUTS: Shortcut[] = [
   },
   {
     id: "copy-list",
-    action: "Copy selected notes as a list",
+    action: "Copy selected notes as a list (when QuickSave is focused)",
     keys: "Ctrl+Shift+C",
     scope: "panel",
   },

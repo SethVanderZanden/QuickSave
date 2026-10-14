@@ -1,5 +1,7 @@
 import { app } from "electron";
 import { type ChildProcess, spawn } from "node:child_process";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { parseShiftHookLine, type HookMessage } from "../src/core/hook-protocol";
 import { ShiftTapDetector } from "../src/core/shift-tap";
 import { firstExisting, hookScriptCandidates, windowsPowershellPath } from "./packaged-paths";
@@ -60,6 +62,11 @@ export function startShiftHook(onMessage: (message: HookMessage) => void): Shift
     if (parsed.type === "ready") {
       restartAttempt = 0;
       console.log("[QuickSave] shift hook ready");
+      if (process.env.QUICKSAVE_E2E === "1") {
+        void writeFile(join(app.getPath("userData"), "hook-ready"), "ready").catch((error) => {
+          console.error("[QuickSave] failed to write hook-ready", error);
+        });
+      }
       return;
     }
     if (parsed.type === "legacy") {

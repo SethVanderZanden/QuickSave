@@ -87,14 +87,23 @@ button {
   background: color-mix(in oklab, var(--accent) 34%, transparent);
 }
 
+.desktop-shell,
+html.desktop-shell,
+html.desktop-shell body,
+html.desktop-shell #root {
+  background: #121317;
+}
+
 .drag-region {
   -webkit-app-region: drag;
   app-region: drag;
 }
 
-.no-drag {
-  -webkit-app-region: no-drag;
-  app-region: no-drag;
+.no-drag,
+.window-controls,
+.window-controls * {
+  -webkit-app-region: no-drag !important;
+  app-region: no-drag !important;
 }
 
 .panel-shell {
@@ -114,8 +123,13 @@ button {
   height: 28px;
   width: 32px;
   place-items: center;
+  border: 0;
+  background: transparent;
   border-radius: var(--radius-control);
   color: var(--muted);
+  user-select: none;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 
 .caption-btn:hover {
