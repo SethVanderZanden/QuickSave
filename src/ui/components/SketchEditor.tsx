@@ -4,13 +4,13 @@ import { useEffect, useRef, useState, type PointerEvent, type ReactNode } from "
 import { useApp } from "../hooks/use-app";
 import { cn } from "../lib/utils";
 
-const COLORS = ["#e8c39e", "#f4efe8", "#d08a4c", "#e07864", "#7dcea0", "#7eb6d9", "#1c1712"];
+const COLORS = ["#e4d6b8", "#f4f1ea", "#c4b08a", "#c45c4a", "#7d9a86", "#7d93a8", "#1b1a17"];
 
 export function SketchEditor() {
   const { controller, workspace, ui } = useApp();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [tool, setTool] = useState<SketchTool>("pen");
-  const [color, setColor] = useState(COLORS[0] ?? "#e8c39e");
+  const [color, setColor] = useState(COLORS[0] ?? "#e4d6b8");
   const [width, setWidth] = useState(2.5);
   const existing = workspace.notes.find((note) => note.id === ui.sketchNoteId)?.sketch;
   const [doc, setDoc] = useState<SketchDocument>(
@@ -45,8 +45,8 @@ export function SketchEditor() {
 
   return (
     <div className="absolute inset-0 z-20 flex flex-col bg-[var(--bg)] no-drag">
-      <header className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-3 py-2">
-        <p className="text-xs tracking-[0.16em] uppercase text-[var(--muted)]">Sketch</p>
+      <header className="flex items-center justify-between gap-2 border-b border-[var(--line)] px-4 py-3">
+        <p className="font-serif text-[16px] tracking-[-0.02em] text-[var(--ink)]">Sketch</p>
         <div className="flex items-center gap-1">
           <ToolButton active={tool === "pen"} onClick={() => setTool("pen")} label="Pen">
             <MousePointer2 className="h-3.5 w-3.5" />
@@ -108,7 +108,7 @@ export function SketchEditor() {
           data-testid="sketch-canvas"
           width={doc.width}
           height={doc.height}
-          className="h-full w-full cursor-crosshair touch-none bg-[#14110f]"
+          className="h-full w-full cursor-crosshair touch-none bg-[var(--bg)]"
           onPointerDown={(event) => {
             event.currentTarget.setPointerCapture(event.pointerId);
             const point = pointer(event);
@@ -146,13 +146,13 @@ export function SketchEditor() {
           }}
         />
       </div>
-      <footer className="flex justify-end gap-2 border-t border-[var(--line)] p-3">
-        <button type="button" className="rounded-lg px-3 py-1.5 text-sm hover:bg-[var(--fill)]" onClick={close}>
+      <footer className="flex justify-end gap-2 border-t border-[var(--line)] p-4">
+        <button type="button" className="rounded-[var(--radius-control)] px-3.5 py-2 text-sm hover:bg-[var(--fill)]" onClick={close}>
           Discard
         </button>
         <button
           type="button"
-          className="rounded-lg bg-[var(--color-copper)] px-3 py-1.5 text-sm text-[#1a120c]"
+          className="rounded-[var(--radius-control)] bg-[var(--accent)] px-3.5 py-2 text-sm text-[var(--accent-ink)]"
           onClick={() => {
             const png = rasterize(canvasRef.current);
             controller.saveSketch(doc, sketchPreview(doc), png);
@@ -182,8 +182,8 @@ function ToolButton({
       title={label}
       onClick={onClick}
       className={cn(
-        "grid h-7 w-7 place-items-center rounded-md",
-        active ? "bg-[var(--fill)] text-[var(--color-copper-soft)]" : "text-[var(--muted)] hover:bg-[var(--fill)]",
+        "grid h-8 w-8 place-items-center rounded-[var(--radius-control)]",
+        active ? "bg-[var(--fill)] text-[var(--accent-soft)]" : "text-[var(--muted)] hover:bg-[var(--fill)]",
       )}
     >
       {children}
@@ -219,7 +219,7 @@ function drawStroke(ctx: CanvasRenderingContext2D, item: SketchStroke): void {
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   if (item.tool === "text" && item.text) {
-    ctx.font = `${Math.max(16, item.width * 8)}px Segoe UI, sans-serif`;
+    ctx.font = `${Math.max(16, item.width * 8)}px "Instrument Sans", "Segoe UI", sans-serif`;
     ctx.fillText(item.text, start.x, start.y);
     return;
   }

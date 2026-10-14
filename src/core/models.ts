@@ -109,8 +109,8 @@ export const DEFAULT_SETTINGS: Settings = {
 export const DEFAULT_WINDOW: WindowFrame = {
   x: -1,
   y: -1,
-  width: 400,
-  height: 640,
+  width: 420,
+  height: 680,
 };
 
 export function emptyWorkspace(): Workspace {

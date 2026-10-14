@@ -29,7 +29,7 @@ The Windows installer is built and published only when changes land on `main`.
 
 ## Use it
 
-- The panel floats. Closing it hides it to the **tray**; Quit from the tray to exit.
+- The panel is a single floating pop-out. **Close** (`×`) or `Ctrl+Q` quits. **Minimize** (`—`) or Esc hides it to the **tray** so capture still works.
 - **Left Shift twice** captures selected text in any app. Fallback: `Ctrl+Shift+C`.
 - **Right Shift twice** shows or hides the panel. Fallback: `Ctrl+Shift+Space`.
 - Type prompts at the bottom, Enter to save. `Ctrl+C` copies a note back into ChatGPT / Claude / Cursor. Space checks it off.
@@ -73,7 +73,7 @@ Browser-only UI (no global hotkeys): `npm run web` then open `http://127.0.0.1:5
 | Sketch | `Ctrl+Shift+D` |
 | Search | `Ctrl+F` |
 | Logbook | Clear done archives instead of deleting |
-| Stay out of the way | Closes to the tray, optional always-on-top |
+| Stay out of the way | Minimize to the tray, optional always-on-top. Close quits. |
 
 ## Shortcuts
 
@@ -92,6 +92,8 @@ Browser-only UI (no global hotkeys): `npm run web` then open `http://127.0.0.1:5
 | Sketch | `Ctrl+Shift+D` |
 | Shortcuts / settings | `Ctrl+/` · `Ctrl+,` |
 | Undo / redo | `Ctrl+Z` · `Ctrl+Shift+Z` |
+| Hide panel | `Esc` |
+| Quit | Close (`×`) · `Ctrl+Q` |
 
 The Shift detector only watches Shift. It does not record other keystrokes.
 

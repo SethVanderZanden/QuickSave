@@ -13,3 +13,4 @@ export * from "./reduce";
 export * from "./search";
 export * from "./session";
 export * from "./shortcuts";
+export * from "./shift-tap";

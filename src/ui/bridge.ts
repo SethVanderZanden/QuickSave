@@ -42,3 +42,13 @@ export function getBridge(): QuickSaveBridge | null {
 export function isDesktopRuntime(): boolean {
   return Boolean(window.quicksave?.isDesktop);
 }
+
+export function isElectronUserAgent(): boolean {
+  return typeof navigator !== "undefined" && /electron/i.test(navigator.userAgent);
+}
+
+export function isDesktopShell(bridge?: { isDesktop: boolean } | null): boolean {
+  if (bridge?.isDesktop) return true;
+  if (isDesktopRuntime()) return true;
+  return isElectronUserAgent();
+}

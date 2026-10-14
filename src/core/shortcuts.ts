@@ -130,9 +130,15 @@ export const SHORTCUTS: Shortcut[] = [
     scope: "panel",
   },
   {
-    id: "close",
-    action: "Close panel",
+    id: "hide",
+    action: "Hide panel",
     keys: "Esc",
+    scope: "panel",
+  },
+  {
+    id: "quit",
+    action: "Quit QuickSave",
+    keys: "Ctrl+Q",
     scope: "panel",
   },
 ];

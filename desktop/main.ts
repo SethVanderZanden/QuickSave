@@ -19,8 +19,8 @@ import { JsonFileStore } from "../src/persist/json-store";
 import { FileAttachmentStore } from "../src/persist/attachment-store";
 import { firstExisting, iconCandidates } from "./packaged-paths";
 import { attachmentsDir, dataDir, workspacePath } from "./paths";
-import { captureSelectedText } from "./selection";
-import { startShiftHook } from "./shift-hook";
+import { captureSelectedText, sendCopyChord } from "./selection";
+import { startShiftHook, type ShiftHookHandle } from "./shift-hook";
 
 app.setName("QuickSave");
 if (process.platform === "win32") {
@@ -34,7 +34,7 @@ if (!gotLock) {
 
 let window: BrowserWindow | null = null;
 let tray: Tray | null = null;
-let stopHook: (() => void) | null = null;
+let hook: ShiftHookHandle | null = null;
 let quitting = false;
 let settings: Settings = emptyWorkspace().settings;
 const store = () => new JsonFileStore(workspacePath());
@@ -56,7 +56,9 @@ function createWindow(frame: Workspace["window"]): BrowserWindow {
     alwaysOnTop: settings.keepOnTop,
     skipTaskbar: true,
     roundedCorners: true,
-    backgroundMaterial: process.platform === "win32" ? "acrylic" : undefined,
+    maximizable: false,
+    fullscreenable: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: resolvePreload(),
       contextIsolation: true,
@@ -83,11 +85,12 @@ function createWindow(frame: Workspace["window"]): BrowserWindow {
     void win.loadFile(join(__dirname, "../renderer/index.html"));
   }
 
-  win.on("close", (event) => {
-    if (!quitting) {
-      event.preventDefault();
-      win.hide();
-    }
+  win.on("close", () => {
+    quitting = true;
+  });
+  win.on("closed", () => {
+    if (window === win) window = null;
+    if (quitting) app.quit();
   });
 
   return win;
@@ -106,10 +109,47 @@ async function togglePanel(): Promise<void> {
   }
 }
 
+async function sendCopy(): Promise<void> {
+  if (hook) {
+    try {
+      await hook.sendCopy();
+      return;
+    } catch (error) {
+      console.error("[QuickSave] hook copy failed, falling back", error);
+    }
+  }
+  await sendCopyChord();
+}
+
 async function runCapture(): Promise<void> {
-  const text = await captureSelectedText(settings.restoreClipboardAfterCapture);
+  const text = await captureSelectedText(settings.restoreClipboardAfterCapture, sendCopy);
   if (text) emit({ type: "captured-text", text });
   else emit({ type: "captured-empty" });
+}
+
+function quitApp(): void {
+  quitting = true;
+  hook?.stop();
+  hook = null;
+  app.quit();
+}
+
+function syncShiftHook(enabled: boolean): void {
+  if (enabled && !hook) {
+    hook = startShiftHook((message) => {
+      if (message === "capture") void runCapture();
+      if (message === "toggle") void togglePanel();
+      if (message === "sketch") {
+        window?.show();
+        emit({ type: "sketch-request" });
+      }
+    });
+    return;
+  }
+  if (!enabled && hook) {
+    hook.stop();
+    hook = null;
+  }
 }
 
 function registerShortcuts(): void {
@@ -143,12 +183,13 @@ function createTray(): void {
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: "Show QuickSave", click: () => window?.show() },
+      { label: "Hide", click: () => window?.hide() },
       { label: "Capture selection", click: () => void runCapture() },
       { type: "separator" },
-      { label: "Quit", click: () => {
-        quitting = true;
-        app.quit();
-      } },
+      {
+        label: "Quit QuickSave",
+        click: () => quitApp(),
+      },
     ]),
   );
   tray.on("click", () => void togglePanel());
@@ -159,14 +200,19 @@ function wireIpc(): void {
     await mkdir(dataDir(), { recursive: true });
     const workspace = await store().load();
     settings = workspace.settings;
+    syncShiftHook(settings.enableDoubleShift);
     return workspace;
   });
   ipcMain.handle("workspace:save", async (_event, workspace: Workspace) => {
     const next = hydrateWorkspace(workspace);
     settings = next.settings;
     await store().save(next);
+    window?.setAlwaysOnTop(Boolean(settings.keepOnTop));
+    syncShiftHook(settings.enableDoubleShift);
   });
-  ipcMain.handle("capture:selection", async () => captureSelectedText(settings.restoreClipboardAfterCapture));
+  ipcMain.handle("capture:selection", async () => {
+    return captureSelectedText(settings.restoreClipboardAfterCapture, sendCopy);
+  });
   ipcMain.handle("clipboard:write", async (_event, text: string) => {
     clipboard.writeText(String(text ?? ""));
   });
@@ -177,8 +223,7 @@ function wireIpc(): void {
   ipcMain.handle("window:hide", async () => window?.hide());
   ipcMain.handle("window:show", async () => window?.show());
   ipcMain.handle("window:quit", async () => {
-    quitting = true;
-    app.quit();
+    quitApp();
   });
   ipcMain.handle("window:always-on-top", async (_event, value: boolean) => {
     window?.setAlwaysOnTop(Boolean(value));
@@ -228,16 +273,7 @@ app.whenReady().then(async () => {
   createTray();
   wireIpc();
   registerShortcuts();
-  if (settings.enableDoubleShift) {
-    stopHook = startShiftHook((message) => {
-      if (message === "capture") void runCapture();
-      if (message === "toggle") void togglePanel();
-      if (message === "sketch") {
-        window?.show();
-        emit({ type: "sketch-request" });
-      }
-    });
-  }
+  syncShiftHook(settings.enableDoubleShift);
   window.once("ready-to-show", () => window?.show());
   app.setLoginItemSettings({ openAtLogin: settings.launchAtStartup });
 });
@@ -247,15 +283,21 @@ app.on("second-instance", () => {
   window?.focus();
 });
 
+app.on("before-quit", () => {
+  quitting = true;
+  hook?.stop();
+  hook = null;
+});
+
 app.on("will-quit", () => {
   globalShortcut.unregisterAll();
-  stopHook?.();
+  hook?.stop();
+  hook = null;
 });
 
 app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    /* stay in tray */
-  }
+  quitting = true;
+  app.quit();
 });
 
 function resolvePreload(): string {

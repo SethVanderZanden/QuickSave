@@ -46,7 +46,7 @@ export function CommandPalette() {
           value={search}
           onValueChange={setSearch}
           placeholder="Switch section, run a command…"
-          className="h-12 w-full border-b border-[var(--line)] bg-transparent px-4 text-[13.5px] outline-none"
+          className="h-14 w-full border-b border-[var(--line)] bg-transparent px-5 text-[14px] outline-none"
         />
         <Command.List className="min-h-0 flex-1 overflow-auto p-2 scrollbar-thin">
           <Command.Empty className="px-3 py-6 text-center text-sm text-[var(--muted)]">
@@ -185,7 +185,7 @@ function Item({
     <Command.Item
       value={label}
       onSelect={onSelect}
-      className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-[13px] text-[var(--ink)] data-[selected=true]:bg-[var(--fill)]"
+      className="flex cursor-pointer items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-2.5 text-[13px] text-[var(--ink)] data-[selected=true]:bg-[var(--fill)]"
     >
       <Icon className="h-3.5 w-3.5 text-[var(--muted)]" />
       {label}
