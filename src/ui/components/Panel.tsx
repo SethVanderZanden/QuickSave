@@ -11,8 +11,10 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { classifyWindowHotkey } from "@/core/window-hotkeys";
 import { isDesktopShell } from "../bridge";
 import { useApp } from "../hooks/use-app";
+import { nativeSelectedText } from "../lib/native-selection";
 import { cn, isTypingTarget } from "../lib/utils";
 import { CommandPalette } from "./CommandPalette";
 import { Composer } from "./Composer";
@@ -54,13 +56,46 @@ export function Panel() {
   }, [workspace.settings.theme]);
 
   useEffect(() => {
+    const applyCopy = (format: "plain" | "list") => {
+      if (format === "plain") {
+        const native = nativeSelectedText(document.activeElement);
+        if (native) {
+          void controller.bridge.writeClipboard(native);
+          controller.toast("Copied", "ok");
+          return;
+        }
+      }
+      void controller.copySelection(format);
+    };
+
+    const onCopyEvent = (event: ClipboardEvent) => {
+      if (nativeSelectedText(event.target)) return;
+      const text = controller.session.copyPayload(controller.getUi().selectedIds, "plain");
+      if (!text) return;
+      event.preventDefault();
+      event.clipboardData?.setData("text/plain", text);
+      void controller.copySelection("plain");
+    };
+
     const onKey = (event: KeyboardEvent) => {
-      const meta = event.ctrlKey || event.metaKey;
-      if (meta && event.key.toLowerCase() === "q") {
+      const hotkey = classifyWindowHotkey(event);
+      if (hotkey === "quit") {
         event.preventDefault();
         void controller.bridge.quit();
         return;
       }
+      if (hotkey === "copy-list") {
+        event.preventDefault();
+        applyCopy("list");
+        return;
+      }
+      if (hotkey === "copy-plain") {
+        if (nativeSelectedText(event.target)) return;
+        event.preventDefault();
+        applyCopy("plain");
+        return;
+      }
+      const meta = event.ctrlKey || event.metaKey;
       if (meta && event.key.toLowerCase() === "k") {
         event.preventDefault();
         controller.patchUi({ paletteOpen: !ui.paletteOpen });
@@ -90,16 +125,6 @@ export function Panel() {
         event.preventDefault();
         if (event.shiftKey) controller.session.redo();
         else controller.session.undo();
-        return;
-      }
-      if (meta && event.shiftKey && event.key.toLowerCase() === "c") {
-        event.preventDefault();
-        void controller.copySelection("list");
-        return;
-      }
-      if (meta && event.key.toLowerCase() === "c" && !isTypingTarget(event.target)) {
-        event.preventDefault();
-        void controller.copySelection("plain");
         return;
       }
       if (meta && event.key.toLowerCase() === "e") {
@@ -173,7 +198,16 @@ export function Panel() {
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("copy", onCopyEvent);
+    const stopBridge = controller.bridge.onEvent((event) => {
+      if (event.type === "copy-request") applyCopy("plain");
+      if (event.type === "copy-list-request") applyCopy("list");
+    });
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("copy", onCopyEvent);
+      stopBridge();
+    };
   });
 
   function moveSelection(delta: number, extend: boolean) {
@@ -202,8 +236,11 @@ export function Panel() {
       )}
       data-testid="panel"
     >
-      <header className="drag-region flex items-center gap-3 border-b border-[var(--line)] px-4 py-3">
-        <div className="min-w-0 flex-1">
+      <header className="flex items-center gap-3 border-b border-[var(--line)] py-2 pl-4 pr-3">
+        <div
+          className="titlebar-drag drag-region flex min-h-10 min-w-0 flex-1 flex-col justify-center self-stretch"
+          data-testid="titlebar-drag"
+        >
           <p className="font-serif text-[17px] leading-none tracking-[-0.02em] text-[var(--ink)]">
             QuickSave
           </p>
@@ -216,17 +253,17 @@ export function Panel() {
             {title}
           </button>
         </div>
-        <div className="relative no-drag">
+        <div className="window-controls relative flex shrink-0 items-center" data-testid="window-controls">
           <button
             type="button"
             aria-label="Menu"
             onClick={() => setMenuOpen((open) => !open)}
             className="grid h-8 w-8 place-items-center rounded-[var(--radius-control)] text-[var(--muted)] hover:bg-[var(--fill)] hover:text-[var(--ink)]"
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className="pointer-events-none h-4 w-4" />
           </button>
           {menuOpen ? (
-            <div className="absolute right-0 z-20 mt-1.5 w-52 rounded-[12px] border border-[var(--line)] bg-[var(--bg-elev)] p-1.5 text-[13px] shadow-[var(--shadow)]">
+            <div className="absolute right-0 top-full z-20 mt-1.5 w-52 rounded-[12px] border border-[var(--line)] bg-[var(--bg-elev)] p-1.5 text-[13px] shadow-[var(--shadow)]">
               <MenuItem
                 onClick={() => {
                   setMenuOpen(false);
@@ -297,29 +334,28 @@ export function Panel() {
               ) : null}
             </div>
           ) : null}
+          {desktop ? (
+            <>
+              <CaptionButton
+                label="Minimize"
+                testId="window-minimize"
+                action="hide"
+                onAction={() => void controller.bridge.hide()}
+              >
+                <Minus className="pointer-events-none h-3.5 w-3.5" />
+              </CaptionButton>
+              <CaptionButton
+                label="Close QuickSave"
+                testId="window-close"
+                action="quit"
+                danger
+                onAction={() => void controller.bridge.quit()}
+              >
+                <X className="pointer-events-none h-3.5 w-3.5" />
+              </CaptionButton>
+            </>
+          ) : null}
         </div>
-        {desktop ? (
-          <div className="no-drag flex items-center pl-1">
-            <button
-              type="button"
-              aria-label="Minimize"
-              data-testid="window-minimize"
-              className="caption-btn"
-              onClick={() => void controller.bridge.hide()}
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              aria-label="Close QuickSave"
-              data-testid="window-close"
-              className="caption-btn caption-close"
-              onClick={() => void controller.bridge.quit()}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ) : null}
       </header>
 
       <div className="no-drag border-b border-[var(--line)] px-4 py-3">
@@ -462,6 +498,46 @@ export function Panel() {
       <SketchEditor />
       <Hud />
     </div>
+  );
+}
+
+function CaptionButton({
+  label,
+  testId,
+  action,
+  onAction,
+  children,
+  danger,
+}: {
+  label: string;
+  testId: string;
+  action: "hide" | "quit";
+  onAction: () => void;
+  children: ReactNode;
+  danger?: boolean;
+}) {
+  const last = useRef(0);
+  const fire = (event: { preventDefault(): void; stopPropagation(): void; button?: number }) => {
+    if (event.button != null && event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const now = Date.now();
+    if (now - last.current < 250) return;
+    last.current = now;
+    onAction();
+  };
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      data-testid={testId}
+      data-window-action={action}
+      className={cn("caption-btn", danger && "caption-close")}
+      onPointerDown={fire}
+      onClick={fire}
+    >
+      {children}
+    </button>
   );
 }
 

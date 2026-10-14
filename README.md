@@ -32,7 +32,7 @@ The Windows installer is built and published only when changes land on `main`.
 - The panel is a single floating pop-out. **Close** (`×`) or `Ctrl+Q` quits. **Minimize** (`—`) or Esc hides it to the **tray** so capture still works.
 - **Left Shift twice** captures selected text in any app. Fallback: `Ctrl+Shift+C`.
 - **Right Shift twice** shows or hides the panel. Fallback: `Ctrl+Shift+Space`.
-- Type prompts at the bottom, Enter to save. `Ctrl+C` copies a note back into ChatGPT / Claude / Cursor. Space checks it off.
+- Type prompts at the bottom, Enter to save. Select a note and press `Ctrl+C` to copy it back into ChatGPT / Claude / Cursor (works even if the scratchpad is focused). Space checks it off.
 - `# ProjectName` creates a section. `Ctrl+K` switches sections.
 
 Notes: `%APPDATA%\QuickSave\workspace.json`.
@@ -65,7 +65,7 @@ Browser-only UI (no global hotkeys): `npm run web` then open `http://127.0.0.1:5
 | Capture selected text from any app | **Left Shift ×2**. Fallback: `Ctrl+Shift+C` |
 | Show / hide the panel | **Right Shift ×2**. Fallback: `Ctrl+Shift+Space` |
 | Queue prompts | Type in the composer, Enter to save |
-| Send work back to an AI app | Select notes, `Ctrl+C` or **Copy as list** (`Ctrl+Shift+C`) |
+| Send work back to an AI app | Select notes, `Ctrl+C`. **Copy as list** is `Ctrl+Shift+C` while QuickSave is focused |
 | Check items off | Space, or the circle checkbox |
 | Group by project | Type `# Name` in the composer. `## Name` starts a fresh section and collapses the rest |
 | Switch sections | `Ctrl+K` |
@@ -84,7 +84,7 @@ Browser-only UI (no global hotkeys): `npm run web` then open `http://127.0.0.1:5
 | Command palette | `Ctrl+K` |
 | Search | `Ctrl+F` |
 | Composer | `Ctrl+N` |
-| Copy / copy as list | `Ctrl+C` · `Ctrl+Shift+C` |
+| Copy / copy as list | `Ctrl+C` · `Ctrl+Shift+C` (list while the panel is focused; capture when another app is focused) |
 | Toggle done | `Space` |
 | Edit | `Enter` |
 | Delete / logbook | `Delete` · `Ctrl+Backspace` |
@@ -111,7 +111,10 @@ Hexagonal / ports-and-adapters:
 ```bat
 npm test
 npm run typecheck
+npm run test:electron
 ```
+
+`npm run test:electron` builds the desktop app and runs Playwright against Electron. On Windows it uses real `SendInput` mouse/keyboard events so caption-button and `Ctrl+C` coverage matches the packaged app, not the browser preview.
 
 ## Privacy
 

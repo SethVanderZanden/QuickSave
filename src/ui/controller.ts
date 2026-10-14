@@ -54,6 +54,7 @@ export class AppController {
   private readonly listeners = new Set<() => void>();
   private hudTimer: ReturnType<typeof setTimeout> | null = null;
   private hudSeq = 0;
+  private lastCopyAt = 0;
 
   constructor(readonly bridge: QuickSaveBridge) {
     this.session = new WorkspaceSession(
@@ -178,6 +179,9 @@ export class AppController {
   }
 
   async copySelection(format: "plain" | "list"): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastCopyAt < 120) return;
+    this.lastCopyAt = now;
     const text = this.session.copyPayload(this.ui.selectedIds, format);
     if (!text) return;
     await this.bridge.writeClipboard(text);

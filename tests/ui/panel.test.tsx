@@ -83,6 +83,44 @@ describe("QuickSave panel", () => {
     expect(quit).toHaveBeenCalled();
   });
 
+  it("hides to the tray from the desktop minimize control", async () => {
+    const user = userEvent.setup();
+    const hide = vi.fn(async () => undefined);
+    const controller = AppController.demo({ isDesktop: true });
+    controller.bridge.hide = hide;
+    render(<App controller={controller} />);
+    await user.click(screen.getByTestId("window-minimize"));
+    expect(hide).toHaveBeenCalled();
+  });
+
+  it("keeps caption buttons outside the drag region", () => {
+    const controller = AppController.demo({ isDesktop: true });
+    render(<App controller={controller} />);
+    const close = screen.getByTestId("window-close");
+    const minimize = screen.getByTestId("window-minimize");
+    expect(close.closest("[data-testid=titlebar-drag]")).toBeNull();
+    expect(minimize.closest("[data-testid=titlebar-drag]")).toBeNull();
+    expect(close.closest(".drag-region")).toBeNull();
+    expect(minimize.closest(".drag-region")).toBeNull();
+  });
+
+  it("copies the selected note with Ctrl+C even when the composer is focused", async () => {
+    const user = userEvent.setup();
+    const writeClipboard = vi.fn(async () => undefined);
+    const controller = AppController.demo({ isDesktop: true });
+    controller.bridge.writeClipboard = writeClipboard;
+    render(<App controller={controller} />);
+    act(() => {
+      controller.session.addNote("Send this back to Cursor");
+    });
+    await user.click(await screen.findByText("Send this back to Cursor"));
+    await user.click(screen.getByTestId("composer"));
+    await user.keyboard("{Control>}c{/Control}");
+    await waitFor(() => {
+      expect(writeClipboard).toHaveBeenCalledWith("Send this back to Cursor");
+    });
+  });
+
   it("loads a sample workflow from the empty state", async () => {
     const user = userEvent.setup();
     renderApp();

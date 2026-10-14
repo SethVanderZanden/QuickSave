@@ -21,10 +21,26 @@ import { firstExisting, iconCandidates } from "./packaged-paths";
 import { attachmentsDir, dataDir, workspacePath } from "./paths";
 import { captureSelectedText, sendCopyChord } from "./selection";
 import { startShiftHook, type ShiftHookHandle } from "./shift-hook";
+import { installWindowHotkeys } from "./window-hotkeys";
+
+const e2eUserData = process.env.QUICKSAVE_E2E_USER_DATA;
+if (e2eUserData) {
+  app.setPath("userData", e2eUserData);
+}
+
+function isE2E(): boolean {
+  return process.env.QUICKSAVE_E2E === "1";
+}
 
 app.setName("QuickSave");
 if (process.platform === "win32") {
   app.setAppUserModelId("com.quicksave.desktop");
+}
+if (isE2E()) {
+  app.disableHardwareAcceleration();
+  app.commandLine.appendSwitch("no-sandbox");
+  app.commandLine.appendSwitch("disable-gpu");
+  app.commandLine.appendSwitch("disable-dev-shm-usage");
 }
 
 const gotLock = app.requestSingleInstanceLock();
@@ -41,32 +57,39 @@ const store = () => new JsonFileStore(workspacePath());
 const attachments = () => new FileAttachmentStore(attachmentsDir());
 
 function createWindow(frame: Workspace["window"]): BrowserWindow {
+  const win32 = process.platform === "win32";
   const win = new BrowserWindow({
     width: frame.width,
     height: frame.height,
-    x: frame.x >= 0 ? frame.x : undefined,
-    y: frame.y >= 0 ? frame.y : undefined,
+    x: isE2E() ? 80 : frame.x >= 0 ? frame.x : undefined,
+    y: isE2E() ? 80 : frame.y >= 0 ? frame.y : undefined,
     minWidth: 360,
     minHeight: 480,
-    show: false,
+    show: isE2E(),
     frame: false,
-    transparent: true,
-    backgroundColor: "#00000000",
+    transparent: win32 || isE2E() ? false : true,
+    backgroundColor: win32 || isE2E() ? "#121317" : "#00000000",
     hasShadow: true,
-    alwaysOnTop: settings.keepOnTop,
-    skipTaskbar: true,
+    alwaysOnTop: isE2E() ? true : settings.keepOnTop,
+    skipTaskbar: !isE2E(),
     roundedCorners: true,
+    thickFrame: win32 ? false : undefined,
     maximizable: false,
+    minimizable: true,
+    closable: true,
     fullscreenable: false,
     autoHideMenuBar: true,
     webPreferences: {
       preload: resolvePreload(),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true,
+      sandbox: !isE2E(),
       spellcheck: false,
     },
   });
+
+  win.removeMenu();
+  win.setMenuBarVisibility(false);
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("https:") || url.startsWith("http:")) {
@@ -77,6 +100,14 @@ function createWindow(frame: Workspace["window"]): BrowserWindow {
 
   win.webContents.on("will-navigate", (event, url) => {
     if (url !== win.webContents.getURL()) event.preventDefault();
+  });
+  win.webContents.on("did-fail-load", (_event, code, description, url) => {
+    console.error("[QuickSave] failed to load", code, description, url);
+  });
+
+  win.once("ready-to-show", () => {
+    win.show();
+    win.focus();
   });
 
   if (process.env["ELECTRON_RENDERER_URL"]) {
@@ -91,6 +122,12 @@ function createWindow(frame: Workspace["window"]): BrowserWindow {
   win.on("closed", () => {
     if (window === win) window = null;
     if (quitting) app.quit();
+  });
+
+  installWindowHotkeys(win, {
+    copyPlain: () => emit({ type: "copy-request" }),
+    copyList: () => emit({ type: "copy-list-request" }),
+    quit: () => quitApp(),
   });
 
   return win;
@@ -135,6 +172,7 @@ function quitApp(): void {
 }
 
 function syncShiftHook(enabled: boolean): void {
+  if (isE2E()) return;
   if (enabled && !hook) {
     hook = startShiftHook((message) => {
       if (message === "capture") void runCapture();
@@ -154,10 +192,15 @@ function syncShiftHook(enabled: boolean): void {
 
 function registerShortcuts(): void {
   globalShortcut.unregisterAll();
+  if (isE2E()) return;
   globalShortcut.register("CommandOrControl+Shift+Space", () => {
     void togglePanel();
   });
   globalShortcut.register("CommandOrControl+Shift+C", () => {
+    if (window?.isVisible() && window.isFocused()) {
+      emit({ type: "copy-list-request" });
+      return;
+    }
     void runCapture();
   });
   globalShortcut.register("CommandOrControl+Shift+D", () => {
@@ -266,16 +309,18 @@ function wireIpc(): void {
 }
 
 app.whenReady().then(async () => {
+  Menu.setApplicationMenu(null);
   await mkdir(dataDir(), { recursive: true });
   const workspace = await store().load();
   settings = workspace.settings;
+  wireIpc();
   window = createWindow(workspace.window);
   createTray();
-  wireIpc();
   registerShortcuts();
   syncShiftHook(settings.enableDoubleShift);
-  window.once("ready-to-show", () => window?.show());
-  app.setLoginItemSettings({ openAtLogin: settings.launchAtStartup });
+  if (!isE2E()) {
+    app.setLoginItemSettings({ openAtLogin: settings.launchAtStartup });
+  }
 });
 
 app.on("second-instance", () => {
