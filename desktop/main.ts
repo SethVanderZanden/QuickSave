@@ -70,7 +70,7 @@ function createWindow(frame: Workspace["window"]): BrowserWindow {
     transparent: win32 || isE2E() ? false : true,
     backgroundColor: win32 || isE2E() ? "#121317" : "#00000000",
     hasShadow: true,
-    alwaysOnTop: isE2E() ? true : settings.keepOnTop,
+    alwaysOnTop: isE2E() ? process.env.QUICKSAVE_E2E_KEEP_ON_TOP !== "0" : settings.keepOnTop,
     skipTaskbar: !isE2E(),
     roundedCorners: true,
     thickFrame: win32 ? false : undefined,
@@ -172,7 +172,7 @@ function quitApp(): void {
 }
 
 function syncShiftHook(enabled: boolean): void {
-  if (isE2E()) return;
+  if (isE2E() && process.env.QUICKSAVE_E2E_HOOK !== "1") return;
   if (enabled && !hook) {
     hook = startShiftHook((message) => {
       if (message === "capture") void runCapture();

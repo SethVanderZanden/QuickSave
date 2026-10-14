@@ -25,6 +25,8 @@ public static class QSE2EInput {
   public const uint KEYEVENTF_KEYUP = 0x0002;
   public const byte VK_CONTROL = 0x11;
   public const byte VK_C = 0x43;
+  public const byte VK_LSHIFT = 0xA0;
+  public const byte SCAN_LSHIFT = 0x2A;
 }
 "@
 `;
@@ -39,6 +41,20 @@ Start-Sleep -Milliseconds 80
 [QSE2EInput]::mouse_event([QSE2EInput]::MOUSEEVENTF_LEFTDOWN, 0, 0, 0, [UIntPtr]::Zero)
 Start-Sleep -Milliseconds 40
 [QSE2EInput]::mouse_event([QSE2EInput]::MOUSEEVENTF_LEFTUP, 0, 0, 0, [UIntPtr]::Zero)
+`);
+}
+
+export function nativeDoubleLeftShift(): void {
+  runPowerShell(`
+${BINDINGS}
+function Tap-LeftShift {
+  [QSE2EInput]::keybd_event([QSE2EInput]::VK_LSHIFT, [QSE2EInput]::SCAN_LSHIFT, 0, [UIntPtr]::Zero)
+  Start-Sleep -Milliseconds 40
+  [QSE2EInput]::keybd_event([QSE2EInput]::VK_LSHIFT, [QSE2EInput]::SCAN_LSHIFT, [QSE2EInput]::KEYEVENTF_KEYUP, [UIntPtr]::Zero)
+}
+Tap-LeftShift
+Start-Sleep -Milliseconds 80
+Tap-LeftShift
 `);
 }
 

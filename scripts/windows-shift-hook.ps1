@@ -35,6 +35,7 @@ public static class QuickSaveShiftHook {
   private static readonly LowLevelKeyboardProc _proc = HookProc;
   private static int _leftDown;
   private static int _rightDown;
+  public static bool AcceptInjected;
 
   private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
@@ -160,7 +161,7 @@ public static class QuickSaveShiftHook {
   private static IntPtr HookProc(int nCode, IntPtr wParam, IntPtr lParam) {
     if (nCode >= 0) {
       KBDLLHOOKSTRUCT info = (KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(KBDLLHOOKSTRUCT));
-      if ((info.flags & LLKHF_INJECTED) == 0) {
+      if (AcceptInjected || (info.flags & LLKHF_INJECTED) == 0) {
         int wp = wParam.ToInt32();
         bool isUp = wp == WM_KEYUP || wp == WM_SYSKEYUP || (info.flags & LLKHF_UP) != 0;
         bool isDown = wp == WM_KEYDOWN || wp == WM_SYSKEYDOWN;
@@ -203,4 +204,5 @@ public static class QuickSaveShiftHook {
 }
 "@
 
+[QuickSaveShiftHook]::AcceptInjected = ($env:QUICKSAVE_HOOK_ACCEPT_INJECTED -eq "1")
 [QuickSaveShiftHook]::Run()
