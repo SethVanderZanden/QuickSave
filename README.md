@@ -25,7 +25,7 @@ Optional: **Settings → Start with Windows** so it comes back at login.
 
 A portable build (`QuickSave-Portable-*.exe`) is on the same Releases page if you do not want an install.
 
-Installer builds are also attached to [GitHub Actions](https://github.com/SethVanderZanden/QuickSave/actions) on every pull request.
+The Windows installer is built and published only when changes land on `main`.
 
 ## Use it
 

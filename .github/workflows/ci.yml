@@ -3,7 +3,6 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ["v*"]
   pull_request:
 
 jobs:
@@ -18,41 +17,3 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run typecheck
-
-  windows-installer:
-    needs: test
-    runs-on: windows-latest
-    permissions:
-      contents: write
-    env:
-      CSC_IDENTITY_AUTO_DISCOVERY: "false"
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run dist:win
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-installer
-          path: |
-            release/*.exe
-            release/*.exe.blockmap
-      - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: release/*.exe
-          draft: false
-          generate_release_notes: true
-          body: |
-            Windows installers for QuickSave.
-
-            - **QuickSave-Setup-*.exe** — install once, then re-open from the Start menu or desktop shortcut.
-            - **QuickSave-Portable-*.exe** — run without installing.
-
-            Open-source software, provided **as is**, with **no warranty**. You are solely responsible for how you use it. See LICENSE and DISCLAIMER.md.
-
-            SmartScreen may warn because this build is unsigned. Choose More info → Run anyway.
